@@ -34,6 +34,11 @@ export function dateAtOffset(at: Date, offsetMinutes: number): string {
   return new Date(at.getTime() + offsetMinutes * 60_000).toISOString().slice(0, 10);
 }
 
+/** Календарная дата момента `at` конкретного клиента в IANA-зоне (смещение на этот инстант, с учётом DST). */
+export function calendarDateInZone(at: Date, timeZone: string): string {
+  return dateAtOffset(at, tzOffsetMinutes(timeZone, at));
+}
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function isCalendarDate(s: unknown): s is string {

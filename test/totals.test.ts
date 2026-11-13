@@ -70,6 +70,16 @@ describe("GET /customers/:id/daily-totals", () => {
     expect(res.json()).toEqual([day("2026-02-10", 2500, 412.5)]);
   });
 
+  it("день заказа — в таймзоне клиента на момент createdAt (DST)", async () => {
+    ctx.api.customers.set("c_berlin", "Europe/Berlin");
+    await postWebhook(
+      ctx.app,
+      apiOrder({ customerId: "c_berlin", amount: 100, createdAt: "2026-03-29T22:30:00Z" }),
+    );
+    const res = await dailyTotals(ctx.app, "c_berlin", "2026-03-29", "2026-03-30");
+    expect(res.json()).toEqual([day("2026-03-29", 0), day("2026-03-30", 100)]);
+  });
+
   it("без amountPaid net равен gross", async () => {
     await postWebhook(ctx.app, apiOrder({ amount: 1000, discountPercent: 10 }));
     const res = await dailyTotals(ctx.app, "c_1", "2026-02-10", "2026-02-10");

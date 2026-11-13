@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dateAtOffset, datesBetween, isCalendarDate, parseUtc, tzOffsetMinutes } from "../src/utils/time.js";
+import { calendarDateInZone, dateAtOffset, datesBetween, isCalendarDate, parseUtc, tzOffsetMinutes } from "../src/utils/time.js";
 
 describe("parseUtc", () => {
   it("строка с Z", () => {
@@ -24,12 +24,23 @@ describe("tzOffsetMinutes", () => {
     expect(tzOffsetMinutes("Asia/Novosibirsk", at)).toBe(420);
     expect(tzOffsetMinutes("America/New_York", at)).toBe(-300);
   });
+
+  it("смещение в момент at, а не «сейчас»: DST Europe/Berlin 29.03.2026", () => {
+    expect(tzOffsetMinutes("Europe/Berlin", new Date("2026-03-28T12:00:00Z"))).toBe(60);
+    expect(tzOffsetMinutes("Europe/Berlin", new Date("2026-03-29T12:00:00Z"))).toBe(120);
+  });
 });
 
 describe("даты", () => {
   it("dateAtOffset", () => {
     expect(dateAtOffset(new Date("2026-02-10T21:30:00Z"), 180)).toBe("2026-02-11");
     expect(dateAtOffset(new Date("2026-02-10T20:30:00Z"), 180)).toBe("2026-02-10");
+  });
+
+  it("calendarDateInZone учитывает DST на инстанте заказа", () => {
+    // после перевода (CEST +2): 22:30Z уже 30-е; зимний +1 ошибочно оставил бы 29-е
+    expect(calendarDateInZone(new Date("2026-03-29T22:30:00Z"), "Europe/Berlin")).toBe("2026-03-30");
+    expect(calendarDateInZone(new Date("2026-03-28T22:30:00Z"), "Europe/Berlin")).toBe("2026-03-28");
   });
 
   it("isCalendarDate", () => {
